@@ -8,12 +8,20 @@ import logging
 import re
 import sys
 import argparse
+import os
+
+# Get path to script directory
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Go one level up and into data/logs
+DATA_DIR = os.path.join(BASE_DIR, '..', 'data')
+LOGS_DIR = os.path.join(BASE_DIR, '..', 'logs')
 
 # ------------------------
 # Configuration & Logging
 # ------------------------
 logging.basicConfig(
-    filename="error.log",
+    filename= os.path.join(LOGS_DIR, 'errors.log'),
     filemode="a",
     format="%(asctime)s [%(levelname)s] %(message)s",
     level=logging.INFO
@@ -26,34 +34,34 @@ EMAIL_REGEX = re.compile(r"^[^@]+@[^@]+\.[^@]+$")
 # ------------------------
 def validate_row(row):
     if not row['product'] or row['product'].strip() == '':
+        logging.info(f'{row} - product name is blank')
         return False
-        logging.error(f'{row} - product name is blank')
     
     try:
         if int(row['quantity']) <= 0:
+            logging.info(f'{row} - quantity is not a positive integer')
             return False
-            logging.error(f'{row} - quantity is not a positive integer')
     except ValueError:
+        logging.info(f'{row} - quantity is not a valid integer')
         return False
-        logging.error(f'{row} - quantity is not a valid integer')
     except Exception as e:
+        logging.info(f'{row} - unexpected error')
         return False
-        logging.error(f'{row} - unexpected error')
-
+    
     try:
         if float(row['price']) <= 0:
+            logging.info(f'{row} - price is not a positive float')
             return False
-            logging.error(f'{row} - price is not a positive float')
     except ValueError:
+        logging.info(f'{row} - price is not a valid float')
         return False
-        logging.error(f'{row} - price is not a valid float')
     except Exception as e:
+        logging.info(f'{row} - unexpected error')
         return False
-        logging.error(f'{row} - unexpected error')
 
     if not row['customer_email'] or row['customer_email'].strip() == '' or not EMAIL_REGEX.match(row['customer_email']):
+        logging.info(f'{row} - Invalid email address')
         return False
-        logging.error(f'{row} - Invalid email address')
 
     return True
 # ------------------------
@@ -114,11 +122,18 @@ def process_file(input_file, output_file):
 # ------------------------
 # CLI Entrypoint
 # ------------------------
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Clean and validate sales data.")
     parser.add_argument("input", help="Path to input csv file")
     parser.add_argument("--output", default="clean_data.csv", help="Path to save clean data")
-    #parser.add_argument("--errors", default="error_data.json", help="Path to save invalid data")
     args = parser.parse_args()
 
-    process_file(args.input, args.output)
+    #ensure data folder exists
+    os.makedirs(DATA_DIR, exist_ok=True)
+
+    #create full input/output paths
+    input_path = os.path.join(DATA_DIR, args.input)
+    output_path = os.path.join(DATA_DIR, args.output)
+
+    process_file(input_path, output_path)
