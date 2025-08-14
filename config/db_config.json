@@ -1,0 +1,13 @@
+{
+  "db": "../data/sales_data.db",
+  "table": "sales",
+  "types": {
+    "transaction_id": "int PRIMARY KEY",
+    "product": "text",
+    "quantity": "int",
+    "price": "real",
+    "customer_email": "text",
+    "transaction_date": "date"
+  },
+  "data_file_path": "../data/clean_data.csv"
+}

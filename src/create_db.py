@@ -1,9 +1,12 @@
-import sqlite3
+import db_utils
 
-conn = sqlite3.connect("../data/sales_data.db")
-cur = conn.cursor()
+if __name__ == "__main__":
+    
+    config_path = db_utils.find_config()
+    
+    #create database and table
+    db, table, columns_and_types, data_file_path = db_utils.load_config(config_path) 
+    conn, cur = db_utils.get_connection(db)
+    db_utils.create_table(conn, cur, table, columns_and_types)
+    conn.close()
 
-cur.execute("CREATE TABLE IF NOT EXISTS sales (transaction_id int PRIMARY_KEY, product text, quantity int, customer_email text, transaction_date date, total_value real)")
-
-conn.commit()
-conn.close()

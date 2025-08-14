@@ -1,34 +1,29 @@
-import csv
-import sqlite3
+import db_utils
+
+#--------------
+# Config
+#--------------
+
+config_path = db_utils.find_config()
+db, table, columns_and_types, data_file_path = db_utils.load_config(config_path) 
 
 #------------------
 # connect to db
 #------------------
 
-conn = sqlite3.connect("../data/sales_data.db")
-cur = conn.cursor()
+conn, cur = db_utils.get_connection(db)
 
 #-----------------
-# SQL queries 
+# insert data
 #-----------------
-column_names = 'transaction_id, product, quantity, customer_email, transaction_date, total_value'
-insert_records = f'INSERT INTO sales ({column_names}) VALUES(?, ?, ?, ?, ?, ?)'
 
-select_all = 'SELECT * FROM sales'
-
-#----------------------
-# read data in from csv
-#----------------------
-
-with open('../data/clean_data.csv') as f:
-    data = csv.reader(f)
-    cur.executemany(insert_records, data)
-    conn.commit()
+db_utils.insert_records(conn, cur, data_file_path, table, columns_and_types)
 
 #---------------------
 # check insert
 #---------------------
-cur.execute(select_all)
+
+cur.execute(f"SELECT * FROM {table}")
 print(cur.fetchall())
 
 conn.close()
