@@ -43,20 +43,10 @@ def insert_records(conn, cur, file_path, table, column_names_types):
         cur.executemany(insert_records, data)
         conn.commit()
 
-def write_report(query):
+def write_report(cur, query, file_name):
     cur.execute(query)
     headers = [col[0] for col in cur.description]
-    with open(query+'.csv', 'w') as f:
+    with open('../reports/'+file_name+'.csv', 'w') as f:
         writer = csv.writer(f)
         writer.writerow(headers)
         writer.writerows(cur.fetchall())
-
-def sql_report_start():
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    CONFIG_DIR = os.path.join(BASE_DIR, '..', 'config')
-    parser = argparse.ArgumentParser(description="Choose config file and SQL query to run report.")
-    parser.add_argument("config", help="Config file name.")
-    parser.add_argument
-    args = parser.parse_args()
-    config_path = os.path.join(CONFIG_DIR, args.config)
-    return config_path
