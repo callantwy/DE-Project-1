@@ -24,7 +24,7 @@ logging.basicConfig(
     filename= os.path.join(LOGS_DIR, 'errors.log'),
     filemode="a",
     format="%(asctime)s [%(levelname)s] %(message)s",
-    level=logging.INFO
+    level=logging.WARNING
 )
 
 EMAIL_REGEX = re.compile(r"^[^@]+@[^@]+\.[^@]+$")
@@ -34,33 +34,33 @@ EMAIL_REGEX = re.compile(r"^[^@]+@[^@]+\.[^@]+$")
 # ------------------------
 def validate_row(row):
     if not row['product'] or row['product'].strip() == '':
-        logging.info(f'{row} - product name is blank')
+        logging.warning(f'{row} - product name is blank')
         return False
     
     try:
         if int(row['quantity']) <= 0:
-            logging.info(f'{row} - quantity is not a positive integer')
+            logging.warning(f'{row} - quantity is not a positive integer')
             return False
     except ValueError:
-        logging.info(f'{row} - quantity is not a valid integer')
+        logging.warning(f'{row} - quantity is not a valid integer')
         return False
     except Exception as e:
-        logging.info(f'{row} - unexpected error')
+        logging.warning(f'{row} - unexpected error')
         return False
     
     try:
         if float(row['price']) <= 0:
-            logging.info(f'{row} - price is not a positive float')
+            logging.warning(f'{row} - price is not a positive float')
             return False
     except ValueError:
-        logging.info(f'{row} - price is not a valid float')
+        logging.warning(f'{row} - price is not a valid float')
         return False
     except Exception as e:
-        logging.info(f'{row} - unexpected error')
+        logging.warning(f'{row} - unexpected error')
         return False
 
     if not row['customer_email'] or row['customer_email'].strip() == '' or not EMAIL_REGEX.match(row['customer_email']):
-        logging.info(f'{row} - Invalid email address')
+        logging.warning(f'{row} - Invalid email address')
         return False
 
     return True
