@@ -32,33 +32,26 @@ EMAIL_REGEX = re.compile(r"^[^@]+@[^@]+\.[^@]+$")
 # ------------------------
 # Data Validation
 # ------------------------
+def valid_number(row, field, type):
+        try:
+            if type(row[field]) <= 0:
+                logging.warning(f'{row} - {field} is not a positive integer')
+                return False
+        except ValueError:
+            logging.warning(f'{row} - quantity is not a valid integer')
+            return False
+        except Exception as e:
+            logging.warning(f'{row} - unexpected error')
+            return False
+
 def validate_row(row):
     if not row['product'] or row['product'].strip() == '':
         logging.warning(f'{row} - product name is blank')
         return False
     
-    try:
-        if int(row['quantity']) <= 0:
-            logging.warning(f'{row} - quantity is not a positive integer')
-            return False
-    except ValueError:
-        logging.warning(f'{row} - quantity is not a valid integer')
-        return False
-    except Exception as e:
-        logging.warning(f'{row} - unexpected error')
-        return False
+    valid_number(row, 'quantity', int)
+    valid_number(row, 'price', float)
     
-    try:
-        if float(row['price']) <= 0:
-            logging.warning(f'{row} - price is not a positive float')
-            return False
-    except ValueError:
-        logging.warning(f'{row} - price is not a valid float')
-        return False
-    except Exception as e:
-        logging.warning(f'{row} - unexpected error')
-        return False
-
     if not row['customer_email'] or row['customer_email'].strip() == '' or not EMAIL_REGEX.match(row['customer_email']):
         logging.warning(f'{row} - Invalid email address')
         return False
