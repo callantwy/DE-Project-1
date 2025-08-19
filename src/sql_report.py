@@ -1,5 +1,4 @@
 import db_utils 
-import csv
 import argparse
 import os
 import sys
