@@ -15,26 +15,18 @@ queries = {"total_sales":"SELECT product, sum(quantity * price) as total_spend F
 if __name__ == '__main__':
     #Build parser which takes config file and an SQL query as arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('config', help='Specify the config file that has the details of your db')
-    parser.add_argument('query', help='Specify the SQL query you would like to run. Options are total_sales, transactions_per_day, top_customers or average_order_value or all')
+    parser.add_argument('db_config', help='Specify the config file that has the details of your db')
+    parser.add_argument('report_config', help='Specify the SQL query you would like to run. Options are total_sales, transactions_per_day, top_customers or average_order_value or all')
     args = parser.parse_args()
 
     #Connect to DB
-    config_path = db_utils.find_config(args.config, CONFIG_DIR)
-    db, table, columns_and_types, data_file_path = db_utils.load_config(config_path) 
+    db_config_path = db_utils.find_config(args.db_config, CONFIG_DIR)
+    db, table, columns_and_types, data_file_path = db_utils.load_config(db_config_path) 
     conn, cur = db_utils.get_connection(db)
 
     #Write report to csv
-    if args.query == 'all':
-        for query_name, query in queries.items():
-            file_name = query_name
-            db_utils.write_report(cur, query, file_name)
-    else:
-        try:
-            query = queries[args.query]
-        except KeyError:
-            print("Query not found. Please see --help for list of queries.")
-            sys.exit(1)
-        file_name = args.query
-        db_utils.write_report(cur, query, file_name)
+    report_config_path = db_utils.find_config(args.report_config, CONFIG_DIR)
+    report_config = db_utils.read_report_config(report_config_path)
+
+    db_utils.write_report(cur, report_config)
         

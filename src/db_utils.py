@@ -1,16 +1,32 @@
 import sqlite3
 import csv
 import json 
-import argparse
 import os
+import logging
+import sys
+import datetime
 
+# create logging instance
+logger = logging.getLogger(__name__)
+
+# db config utils
 def find_config(config_name, CONFIG_DIR):
     config_path = os.path.join(CONFIG_DIR, config_name)
     return config_path
 
 def load_config(config_file_path):
-    with open(config_file_path) as f:
-        config = json.load(f)
+    try:
+        with open(config_file_path) as f:
+            try:
+                config = json.load(f)
+            except json.JSONDecodeError as e:
+                logging.error(f"Can't parse {config_file_path}")
+                print("Invalid config file - can't parse.")
+                sys.exit(1)
+    except FileNotFoundError:
+        logging.error(f"{config_file_path} not found")
+        print("Config file not found.")
+        sys.exit(1)
     db = config['db']
     table = config['table']
     columns_and_types = config['types']
@@ -25,8 +41,6 @@ def get_connection(db):
     conn = sqlite3.connect(db)
     cur = conn.cursor()
     return conn, cur
-
-# how do we enforce that column_names_types is dict
 
 def create_table(conn, cur, table_name, column_names_types):
     column_names = get_column_names(column_names_types)
@@ -43,10 +57,36 @@ def insert_records(conn, cur, file_path, table, column_names_types):
         cur.executemany(insert_records, data)
         conn.commit()
 
-def write_report(cur, query, file_name):
-    cur.execute(query)
-    headers = [col[0] for col in cur.description]
-    with open('../reports/'+file_name+'.csv', 'w') as f:
-        writer = csv.writer(f)
-        writer.writerow(headers)
-        writer.writerows(cur.fetchall())
+# reporting
+def read_report_config(report_config_file):
+    try:
+        with open(report_config_file) as f:
+            try:
+                report_config = json.load(f)
+            except json.JSONDecodeError:
+                logging.error(f"Can't parse {report_config}")
+                print("Invalid schema - can't parse")
+    except FileNotFoundError:
+        print("Schema file not found.")
+        logging.error(f'{report_config_file} not found.')
+        sys.exit(1)
+    return report_config
+
+def replace_date(output_file):
+    today = datetime.date.today()
+    formatted = today.strftime('%Y%m%d')
+    output_file = output_file.replace('{date}', formatted)
+    return output_file
+
+def write_report(cur, config):
+    for report in config:
+        try:
+            cur.execute(report['query'])
+        except sqlite3.OperationalError:
+            logging.warning("OperationalError - invalid query in")
+        headers = [col[0] for col in cur.description]
+        output_file = replace_date(report['output_file'])
+        with open(f'{output_file}', 'w') as f:
+            writer = csv.writer(f)
+            writer.writerow(headers)
+            writer.writerows(cur.fetchall())

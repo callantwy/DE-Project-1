@@ -4,9 +4,6 @@ __pycache__/
 .venv/
 
 # Logs
-logs/
-
-
 data/*
 logs/*
 reports/*
