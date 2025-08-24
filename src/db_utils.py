@@ -78,15 +78,38 @@ def replace_date(output_file):
     output_file = output_file.replace('{date}', formatted)
     return output_file
 
-def write_report(cur, config):
-    for report in config:
-        try:
-            cur.execute(report['query'])
-        except sqlite3.OperationalError:
-            logging.warning("OperationalError - invalid query in")
+def get_query(report, config):
+    query = config[report].get('query')
+    if query:
+        return query
+    else:
+        logging.warning("Query not found for report in config.")
+
+def execute_query(cur, query):
+    try:
+        cur.execute(query)
         headers = [col[0] for col in cur.description]
-        output_file = replace_date(report['output_file'])
-        with open(f'{output_file}', 'w') as f:
-            writer = csv.writer(f)
-            writer.writerow(headers)
-            writer.writerows(cur.fetchall())
+        results = cur.fetchall()
+        return headers, results
+    except sqlite3.OperationalError:
+        logging.warning("OperationalError - invalid query in")
+        print(f"{query} not valid.")
+
+def write_report(headers, results, output_file):
+    with open(f'{output_file}', 'w') as f:
+        writer = csv.writer(f)
+        writer.writerow(headers)
+        writer.writerows(results)    
+
+def execute_and_write(cur, report, config):
+    query = get_query(report, config)
+    headers, results = execute_query(cur, query)
+    output_file = replace_date(config[report]['output_file'])
+    write_report(headers, results, output_file)
+
+def process_reports(cur, report, config):
+    if report == 'all':
+        for report in config:
+            execute_and_write(cur, report, config)
+    else:
+        execute_and_write(cur, report, config)

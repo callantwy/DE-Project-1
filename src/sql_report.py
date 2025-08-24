@@ -17,6 +17,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('db_config', help='Specify the config file that has the details of your db')
     parser.add_argument('report_config', help='Specify the SQL query you would like to run. Options are total_sales, transactions_per_day, top_customers or average_order_value or all')
+    parser.add_argument('--report', default='all', help='Specify which report from config you would like to run. Default = all.')
     args = parser.parse_args()
 
     #Connect to DB
@@ -28,5 +29,5 @@ if __name__ == '__main__':
     report_config_path = db_utils.find_config(args.report_config, CONFIG_DIR)
     report_config = db_utils.read_report_config(report_config_path)
 
-    db_utils.write_report(cur, report_config)
+    db_utils.process_reports(cur, args.report, report_config)
         
